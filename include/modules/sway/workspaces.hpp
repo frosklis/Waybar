@@ -48,6 +48,8 @@ class Workspaces : public AModule, public sigc::trackable {
   std::unordered_map<std::string, Gtk::Button> buttons_;
   std::mutex mutex_;
   Ipc ipc_;
+
+  std::vector<Json::Value> filterOutWorkspacesByPrefix(const std::vector<Json::Value> &workspaces, const std::string &prefix);
 };
 
 }  // namespace waybar::modules::sway

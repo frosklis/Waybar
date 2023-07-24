@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <iostream>
 #include <string>
 
 namespace waybar::modules::sway {
@@ -197,7 +198,10 @@ bool Workspaces::filterButtons() {
 auto Workspaces::update() -> void {
   std::lock_guard<std::mutex> lock(mutex_);
   bool needReorder = filterButtons();
-  for (auto it = workspaces_.begin(); it != workspaces_.end(); ++it) {
+
+  std::vector<Json::Value> filteredWorkspaces = filterOutWorkspacesByPrefix(workspaces_, "__");
+
+  for (auto it = filteredWorkspaces.begin(); it != filteredWorkspaces.end(); ++it) {
     auto bit = buttons_.find((*it)["name"].asString());
     if (bit == buttons_.end()) {
       needReorder = true;
@@ -398,6 +402,22 @@ void Workspaces::onButtonReady(const Json::Value &node, Gtk::Button &button) {
   } else {
     button.show();
   }
+}
+
+std::vector<Json::Value> Workspaces::filterOutWorkspacesByPrefix(
+    const std::vector<Json::Value> &workspaces, const std::string &prefix) {
+  std::vector<Json::Value> filtered;
+  for (const auto &workspace : workspaces) {
+    const std::string &name = workspace["name"].asString();
+    if (name.compare(0, prefix.size(), prefix) != 0) {
+      filtered.push_back(workspace);
+      spdlog::debug("workspace: {}", workspace["name"]);
+    }
+  }
+
+  spdlog::info("Filtered size: {}", filtered.size());
+
+  return filtered;
 }
 
 }  // namespace waybar::modules::sway
